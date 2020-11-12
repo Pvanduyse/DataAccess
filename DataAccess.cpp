@@ -5,7 +5,7 @@
 
 #include "DataAccess.h"
 
-void DataAccess::Open(std::string fileName) {
+void DataAccess::Open(const std::string& fileName) {
 
     filePath = PARENT_DIRECTORY + fileName;
 
@@ -71,7 +71,7 @@ void DataAccess::Save() const {
     }
 }
 
-void DataAccess::SetValue(std::string dataId, std::string dataValue) {
+void DataAccess::SetValue(const std::string& dataId, const std::string& dataValue) {
     int index = IndexFromId(dataId);
     if(index == -1) {//IndexFromId returns -1 if a data point was not found
         DataPoint newDataPoint;
@@ -84,7 +84,7 @@ void DataAccess::SetValue(std::string dataId, std::string dataValue) {
     }
 }
 
-std::string DataAccess::GetValue(std::string dataId) const {
+std::string DataAccess::GetValue(const std::string& dataId) const {
     int index = IndexFromId(dataId);
     if(index == -1) {//IndexFromId returns -1 if a data point was not found
         return "ERROR: No data point of ID [" + dataId + "] was found in " + filePath.generic_string();
@@ -92,7 +92,7 @@ std::string DataAccess::GetValue(std::string dataId) const {
     return dataPoints.at(index).value;
 }
 
-int DataAccess::Remove(std::string dataId) {
+int DataAccess::Remove(const std::string& dataId) {
     int index = IndexFromId(dataId);
     if(index == -1) {
         return -1;
@@ -114,7 +114,7 @@ int DataAccess::Size() const {
     return dataPoints.size();
 }
 
-int DataAccess::IndexFromId(std::string dataId) const {
+int DataAccess::IndexFromId(const std::string& dataId) const {
     for(unsigned int i = 0; i < dataPoints.size(); ++i) {
         if(dataPoints.at(i).id == dataId) {
             return i;

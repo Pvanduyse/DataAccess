@@ -12,15 +12,15 @@ namespace fs = std::experimental::filesystem;
 class DataAccess {
     public:
 
-        void Open(std::string fileName = "SaveData.txt");
+        void Open(const std::string& fileName = "SaveData.txt");
 
         void Save() const;
 
-        void SetValue(std::string dataId, std::string dataValue);
+        void SetValue(const std::string& dataId, const std::string& dataValue);
 
-        std::string GetValue(std::string dataId) const;
+        std::string GetValue(const std::string& dataId) const;
 
-        int Remove(std::string dataId);
+        int Remove(const std::string& dataId);
 
         void Print(bool printIds = false) const;
 
@@ -39,7 +39,7 @@ class DataAccess {
 
         std::vector<DataPoint> dataPoints;
 
-        int IndexFromId(std::string dataId) const;
+        int IndexFromId(const std::string& dataId) const;
 };
 
 #endif

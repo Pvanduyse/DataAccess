@@ -89,7 +89,7 @@ std::string DataAccess::GetValue(std::string dataId) const {
     if(index == -1) {//IndexFromId returns -1 if a data point was not found
         return "ERROR: No data point of ID [" + dataId + "] was found in " + filePath.generic_string();
     }
-    return dataPoints.at(IndexFromId(dataId)).value;
+    return dataPoints.at(index).value;
 }
 
 int DataAccess::Remove(std::string dataId) {

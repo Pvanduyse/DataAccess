@@ -22,7 +22,7 @@ class DataAccess {
 
         int Remove(std::string dataId);
 
-        void Print() const;
+        void Print(bool printIds = false) const;
 
         int Size() const;
 

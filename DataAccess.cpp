@@ -101,9 +101,12 @@ int DataAccess::Remove(std::string dataId) {
     return 0;
 }
 
-void DataAccess::Print() const {
+void DataAccess::Print(bool printIds) const {
     for(DataPoint data : dataPoints) {
-        std::cout << data.id << " " << data.value << std::endl;
+        if(printIds == true){
+            std::cout << data.id << " ";
+        }
+        std::cout << data.value << std::endl;
     }
 }
 

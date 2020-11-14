@@ -10,36 +10,44 @@
 namespace fs = std::filesystem;
 
 class DataAccess {
-    public:
+	public:
 
-        void Open(const std::string& fileName = "SaveData.txt");
+		int Load(const std::string& fileName, const bool overrideCache = false);
 
-        void Save() const;
+		int Load(const bool overrideCache = false);
 
-        void SetValue(const std::string& dataId, const std::string& dataValue);
+		void Save(const std::string& fileName, const bool overrideFile = false);
+		
+		void Save(const bool overrideFile = false);
 
-        std::string GetValue(const std::string& dataId) const;
+		void SetValue(const std::string& dataId, const std::string& dataValue);
 
-        int Remove(const std::string& dataId);
+		std::string GetValue(const std::string& dataId) const;
 
-        void Print(bool printIds = false) const;
+		int Remove(const std::string& dataId);
 
-        int Size() const;
+		void Print(bool printIds = false) const;
 
-    private:
+		int Size() const;
 
-        const std::string PARENT_DIRECTORY = "./data/";
+	private:
 
-        fs::path filePath;
+		fs::path filePath ="./data/SaveData.txt";
 
-        struct DataPoint {
-            std::string id;
-            std::string value;
-        };
+		struct DataPoint {
+			std::string id;
+			std::string value;
+		};
 
-        std::vector<DataPoint> dataPoints;
+		std::vector<DataPoint> dataset;
 
-        int IndexFromId(const std::string& dataId) const;
+		int ReadFile(std::vector<DataPoint>& dataPointVector) const;
+
+		int IndexFromId(const std::string& dataId) const;
+
+		int IndexFromId(const std::string& dataId, const std::vector<DataPoint>& dataPointVector) const;
+
+		void UpdateFilename(const std::string& filename);
 };
 
 #endif

@@ -5,70 +5,67 @@
 
 #include "DataAccess.h"
 
-void DataAccess::Open(const std::string& fileName) {
-
-    filePath = PARENT_DIRECTORY + fileName;
-
-    if(filePath.extension() == "") {
-        filePath += ".txt";
-    }
-
-    std::ifstream inFile;
-    unsigned int size = 0;
-    DataPoint newData;
-    
-    if(fs::exists(filePath) == true) {
-
-        inFile.open(filePath);
-        if(inFile.is_open() == false) {
-            throw -1;
-        }
-
-        inFile >> size;
-        inFile.ignore();
-        dataPoints.resize(size);
-
-        for(unsigned int i = 0; i < size; i++) {
-            
-            inFile >> newData.id;
-            inFile.ignore();
-            getline(inFile, newData.value);
-
-            dataPoints.at(i) = newData;
-        }
-
-        inFile.close();
-    }
-
-    else {//If the file doesn't exist, try to create it
-
-        fs::create_directories(filePath.parent_path());
-        
-        std::ofstream tempStream;
-        tempStream.open(filePath);
-        if(tempStream.is_open() == false) {//If it fails again throw an error
-            throw "File creation failed";
-        }
-        tempStream << 0 << std::endl;
-        tempStream.close();
-
-        dataPoints.resize(0);
-    }
+int DataAccess::Load(const std::string& filename, const bool overrideCache) {
+	UpdateFilename(filename);
+	return Load(overrideCache);
 }
 
-void DataAccess::Save() const {
-    std::ofstream outFile;
+int DataAccess::Load(const bool overrideCache) {
+	if(overrideCache == true) {
+		dataset.resize(0);
+		return ReadFile(dataset);
+	}
 
+	std::vector<DataPoint> fileDataSet;
+	if(ReadFile(fileDataSet) == -1) {
+		return -1;	
+	}
+
+	for(DataPoint data : fileDataSet) {
+		SetValue(data.id, data.value);
+	}
+	return 0;
+}
+
+void DataAccess::Save(const std::string& filename, const bool overrideFile) {
+	UpdateFilename(filename);
+	Save(overrideFile);
+}
+
+void DataAccess::Save(const bool overrideFile) {
+	std::vector<DataPoint> existingData;
+	if(overrideFile == false && fs::exists(filePath) == true) {
+		ReadFile(existingData);
+		for(DataPoint data : dataset) {
+			int index = IndexFromId(data.id, existingData);
+			if(index == -1) {
+				existingData.push_back(data);
+			}
+			else {
+				existingData.at(index) = data;
+			}
+		}
+	}
+	else {
+		existingData = dataset;
+	}
+
+	if(fs::exists(filePath) == false) {
+        fs::create_directories(filePath.parent_path());
+	}
+
+    std::ofstream outFile;
     outFile.open(filePath);
     if(outFile.is_open() == false) {
-        throw "File creation failed";
+		throw;
     }
 
-    outFile << dataPoints.size() << std::endl;
+    outFile << existingData.size() << std::endl;
 
-    for(DataPoint data : dataPoints) {
+	for(DataPoint data : existingData) {
         outFile << data.id << " " << data.value << std::endl;
-    }
+	}
+	outFile.close();
 }
 
 void DataAccess::SetValue(const std::string& dataId, const std::string& dataValue) {
@@ -77,10 +74,10 @@ void DataAccess::SetValue(const std::string& dataId, const std::string& dataValu
         DataPoint newDataPoint;
         newDataPoint.id = dataId;
         newDataPoint.value = dataValue;
-        dataPoints.push_back(newDataPoint);
+        dataset.push_back(newDataPoint);
     }
     else {
-        dataPoints.at(index).value = dataValue;
+        dataset.at(index).value = dataValue;
     }
 }
 
@@ -89,7 +86,7 @@ std::string DataAccess::GetValue(const std::string& dataId) const {
     if(index == -1) {//IndexFromId returns -1 if a data point was not found
         return "ERROR: No data point of ID [" + dataId + "] was found in " + filePath.generic_string();
     }
-    return dataPoints.at(index).value;
+    return dataset.at(index).value;
 }
 
 int DataAccess::Remove(const std::string& dataId) {
@@ -97,12 +94,12 @@ int DataAccess::Remove(const std::string& dataId) {
     if(index == -1) {
         return -1;
     }
-    dataPoints.erase(dataPoints.begin() + index);
+    dataset.erase(dataset.begin() + index);
     return 0;
 }
 
 void DataAccess::Print(bool printIds) const {
-    for(DataPoint data : dataPoints) {
+    for(DataPoint data : dataset) {
         if(printIds == true){
             std::cout << data.id << " ";
         }
@@ -111,14 +108,53 @@ void DataAccess::Print(bool printIds) const {
 }
 
 int DataAccess::Size() const {
-    return dataPoints.size();
+    return dataset.size();
+}
+
+int DataAccess::ReadFile(std::vector<DataPoint>& dataPointVector) const {
+    std::ifstream inFile;
+    unsigned int size = 0;
+    DataPoint newData;
+    
+    if(fs::exists(filePath) == false) {
+		return -1;
+	}
+
+	inFile.open(filePath);
+	if(inFile.is_open() == false) {
+		return -1;
+	}
+
+	inFile >> size;
+	inFile.ignore();
+
+	for(unsigned int i = 0; i < size; i++) {
+		inFile >> newData.id;
+		inFile.ignore();
+		getline(inFile, newData.value);
+		dataPointVector.push_back(newData);
+	}
+
+	inFile.close();
+	return 0;
 }
 
 int DataAccess::IndexFromId(const std::string& dataId) const {
-    for(unsigned int i = 0; i < dataPoints.size(); ++i) {
-        if(dataPoints.at(i).id == dataId) {
+    return IndexFromId(dataId, dataset);
+}
+
+int DataAccess::IndexFromId(const std::string& dataId, const std::vector<DataPoint>& dataPointVector) const {
+    for(unsigned int i = 0; i < dataPointVector.size(); ++i) {
+        if(dataPointVector.at(i).id == dataId) {
             return i;
         }
     }
     return -1;
+}
+
+void DataAccess::UpdateFilename(const std::string &filename) {
+	filePath.filename() = filename;
+	if(filePath.extension() == "") {
+		filePath += ".txt";
+	}
 }
